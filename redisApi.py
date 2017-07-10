@@ -8,33 +8,30 @@ TO_DO:
 ---get,set,exit,remove
 ---key and value adding with a ttl
 ---value is string as of now
----one main thing is ttl in session is probably in unix timestamp,so converting it to a ttl valued thing; i.e. remaining seconds is a thing 
-Target : 
----3PM
+---redis for set,list,hashmap
 """
 
 class RedisApi(object):
-    def __init__(self):
+    def __init__(self,host,port,database):
         print "hello RedisApi"
-        with open("config.yaml","r") as configfile:
-            self.config_file = yaml.load(configfile)
-            
-        self.redis_config = self.config_file["redis"]
-        self.pool = redis.ConnectionPool(host=self.redis_config["host"],port=self.redis_config["port"],db = self.redis_config["db"])
-        self.r = redis.StrictRedis(connection_pool = self.pool)
+        self.host = host
+        self.port = port
+        self.database = database
+        self.pool = redis.ConnectionPool(host=self.host,port=self.port,db = self.database)
+        self.strict_redis = redis.StrictRedis(connection_pool = self.pool)
         print "Welcome to Redis!!!"
         
 
-    def set_string(self,key,token,ttl):
-        self.value = token
+    def set_string(self,key,value,ttl):
+        self.value = value
         self.key = key
         self.time = ttl
-        self.r.setex(self.key,self.time,self.value)
+        self.strict_redis.setex(self.key,self.time,self.value)
         return True
 
     def get_string(self,key):
         self.search_key = key
-        self.search_value = self.r.get(key)
+        self.search_value = self.strict_redis.get(key)
         try:
             if search_value == None:
                 raise ValueError
@@ -50,17 +47,55 @@ class RedisApi(object):
         """
         bool value indicating the presence of the key
         """
-        self.is_exist =  self.r.exists(key)
+        self.is_exist =  self.strict_redis.exists(key)
         return self.is_exist
 
     def remove_key(self,key):
         self.remove_key = key
-        self.r.delete(self.remove_key)
+        self.strict_redis.delete(self.remove_key)
+
+    def set_add(self,key, * values):
+        self.strict_redis.sadd(*values)
+        return True
+
         
+    def hash_set(self,key,token):
+        """
+        multiple value insertion in dictionary
+        token must be a dictionary type
+        """
+        try:
+            if type(token) != dict:
+                raise TypeError
+        except TypeError:
+            print "Provide dict here!!!"
+            return None
+        else:
+            self.strict_redis.hmset(key,token)
+            return True    
+
+    def hash_get(self,key,field):
+        """
+        single querry of a hash field
+        """
+        return self.strict_redis.hget(key,field)
+
+    def hash_remove(self,key,field):
+        """
+        single field removal
+        """
+        try :
+            self.responce = self.strict_redis.hdel(key,field)
+            if self.resp == 0:
+                raise ValueError
+        except:
+            print "provide correct field value"    
+        else:
+            pass
+        finally:
+            return self.responce
+
     
-
-
-
 
 
 
