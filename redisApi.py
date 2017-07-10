@@ -17,8 +17,8 @@ class RedisApi(object):
         self.host = host
         self.port = port
         self.database = database
-        self.pool = redis.ConnectionPool(host=self.host,port=self.port,db = self.database)
-        self.strict_redis = redis.StrictRedis(connection_pool = self.pool)
+        self.pool = redis.ConnectionPool(host=self.host,port=self.port,db=self.database)
+        self.strict_redis = redis.StrictRedis(connection_pool=self.pool)
         print "Welcome to Redis!!!"
         
 
@@ -54,12 +54,13 @@ class RedisApi(object):
         self.remove_key = key
         self.strict_redis.delete(self.remove_key)
 
-    def set_add(self,key, * values):
-        self.strict_redis.sadd(*values)
+    def set_add(self,key, values):
+        "values is a list simply"    
+        self.strict_redis.sadd(key,*set(values))
         return True
 
         
-    def hash_set(self,key,token):
+    def h_set(self,key,token):
         """
         multiple value insertion in dictionary
         token must be a dictionary type
@@ -74,13 +75,13 @@ class RedisApi(object):
             self.strict_redis.hmset(key,token)
             return True    
 
-    def hash_get(self,key,field):
+    def h_get(self,key,field):
         """
         single querry of a hash field
         """
         return self.strict_redis.hget(key,field)
 
-    def hash_remove(self,key,field):
+    def h_remove(self,key,field):
         """
         single field removal
         """
